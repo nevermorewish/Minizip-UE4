@@ -1,0 +1,1 @@
+![Image text](https://github.com/nevermorewish/Minizip-UE4/ScreenShot.png)
