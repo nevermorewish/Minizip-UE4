@@ -15,12 +15,10 @@ public class MiniZip : ModuleRules
 			}
 			);
 
-        Definitions.Add("HAVE_ZLIB");
         PrivateIncludePaths.AddRange(
 			new string[] {
 				"MiniZip/Private",
                 Path.GetFullPath(Path.Combine(ModuleDirectory, "MiniZip")),
-				 Path.GetFullPath(Path.Combine(ModuleDirectory, "Zipper")),
         // ... add other private include paths required here ...
     }
 			);
@@ -30,6 +28,7 @@ public class MiniZip : ModuleRules
 			new string[]
 			{
 				"Core",
+                "zlib",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -42,7 +41,7 @@ public class MiniZip : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-                "zlib",
+                
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
