@@ -1,8 +1,8 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "zip.h"
-#include "unzip.h"
+#include "MiniZip/zip.h"
+#include "MiniZip/unzip.h"
 #include "ZipBlueprintFunctionLibrary.generated.h"
 
 UCLASS()
@@ -19,4 +19,6 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Zip")
 		static bool UnZipFile(const FString& StrZipFile, const FString& StrDstDir);
 
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Zip")
+		static bool GetZipAllFileCRC(const FString& StrZipFile, TMap<FString, FString>& MapFileCRC);
 };

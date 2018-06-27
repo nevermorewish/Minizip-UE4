@@ -13,16 +13,17 @@ static int DoExtractCurrentFile(unzFile uf, const FString& StrDstDir)
 	unz_file_info64 file_info;
 	uLong ratio = 0;
 	err = unzGetCurrentFileInfo64(uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0);
-
+	StrFileNameInZip = UTF8_TO_TCHAR(filename_inzip);
 	if (err != UNZ_OK)
 	{
+		UE_LOG(LogTemp, Display, TEXT("解压缩获取文件中信息失败%s"), *StrFileNameInZip);
 		return err;
 	}
 
 	int64 SizeBuf = file_info.uncompressed_size;
 	ANSICHAR* Buf = (ANSICHAR*)FMemory::Malloc(SizeBuf);
 	FMemory::Memset(Buf, 0, SizeBuf);
-	StrFileNameInZip = UTF8_TO_TCHAR(filename_inzip);
+
 	err = unzOpenCurrentFile(uf);
 	if (err == UNZ_OK)
 	{
@@ -47,6 +48,7 @@ static int extractCurrentFile(unzFile uf, const FString& StrDstDir)
 	err = unzGetGlobalInfo64(uf, &gi);
 	if (err != UNZ_OK)
 	{
+		UE_LOG(LogTemp, Display, TEXT("解压缩获取文件Gobal信息失败"));
 		return err;
 	}
 
@@ -85,6 +87,7 @@ int DoZipFile(zipFile zf, const FString& srcFile, const FString& StrSaveFileName
 		NULL, 0, false);
 	if (err == ZIP_OK)
 	{
+		UE_LOG(LogTemp, Display, TEXT("压缩文件：%s"), *StrSaveFileName);
 		FArchive*  FileRead = IFileManager::Get().CreateFileReader(*srcFile);
 		if (FileRead)
 		{
@@ -111,6 +114,10 @@ bool UZipBlueprintFunctionLibrary::ZipDir(const FString& StrDir, const FString& 
 	int OpenMode = APPEND_STATUS_CREATE;
 	zipFile zf;
 	zf = zipOpen64(TCHAR_TO_UTF8(*StrZipFileName), OpenMode);
+	if (zf == NULL)
+	{
+		UE_LOG(LogTemp, Display, TEXT("压缩打开文件失败%s"), *StrZipFileName);
+	}
 	if (zf)
 	{
 		TArray<FString> ArrStrFile;
@@ -134,6 +141,10 @@ bool UZipBlueprintFunctionLibrary::ZipFile(const FString& StrFileName, const FSt
 	int OpenMode = APPEND_STATUS_CREATE;
 	zipFile zf;
 	zf = zipOpen64(TCHAR_TO_UTF8(*StrZipFileName), OpenMode);
+	if (zf == NULL)
+	{
+		UE_LOG(LogTemp, Display, TEXT("压缩打开文件失败%s"), *StrZipFileName);
+	}
 	FString StrSaveFileName = FPaths::GetCleanFilename(StrFileName);
 	bool bSuccess = DoZipFile(zf, StrFileName, StrSaveFileName) == ZIP_OK;
 	zipClose(zf, NULL);
@@ -150,7 +161,10 @@ bool UZipBlueprintFunctionLibrary::UnZipFile(const FString& StrZipFile, const FS
 	}
 
 	uf = unzOpen64(TCHAR_TO_UTF8(*StrZipFile));
-
+	if (uf == NULL)
+	{
+		UE_LOG(LogTemp, Display, TEXT("解压缩打开文件失败%s"), *StrZipFile);
+	}
 	int status = 0;
 	status = unzGoToFirstFile(uf);
 	if (status != UNZ_OK) 
@@ -161,6 +175,65 @@ bool UZipBlueprintFunctionLibrary::UnZipFile(const FString& StrZipFile, const FS
 
 	
 	status = extractCurrentFile(uf, StrDstDir);
+	if (status != UNZ_OK)
+	{
+		unzClose(uf);
+		return false;
+	}
+	unzClose(uf);
+	return true;
+}
+
+bool UZipBlueprintFunctionLibrary::GetZipAllFileCRC(const FString& StrZipFile, TMap<FString, FString>& MapFileCRC)
+{
+	unzFile uf = NULL;
+	if (StrZipFile.IsEmpty())
+	{
+		return false;
+
+	}
+
+	uf = unzOpen64(TCHAR_TO_UTF8(*StrZipFile));
+	if (uf == NULL)
+	{
+		UE_LOG(LogTemp, Display, TEXT("获取压缩包文件失败%s"), *StrZipFile);
+	}
+	int status = 0;
+	status = unzGoToFirstFile(uf);
+	if (status != UNZ_OK)
+	{
+		unzClose(uf);
+		return false;
+	}
+
+	unz_global_info64 gi;
+	status = unzGetGlobalInfo64(uf, &gi);
+	if (status != UNZ_OK)
+	{
+		UE_LOG(LogTemp, Display, TEXT("解压缩获取文件Gobal信息失败"));
+		return false;
+	}
+
+	char filename_inzip[256];
+	for (int i = 0; i < gi.number_entry; i++)
+	{
+		unz_file_info64 file_info;
+		status = unzGetCurrentFileInfo64(uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0);
+		if (status != UNZ_OK)
+		{
+			break;
+		}
+		MapFileCRC.Add(UTF8_TO_TCHAR(filename_inzip), FString::Printf(TEXT("%ld"), file_info.crc));
+		if ((i + 1) < gi.number_entry)
+		{
+			status = unzGoToNextFile(uf);
+			if (status != UNZ_OK)
+			{
+				break;
+			}
+		}
+	}
+
 	if (status != UNZ_OK)
 	{
 		unzClose(uf);

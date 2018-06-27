@@ -71,7 +71,7 @@
 */
 
 /* I've found an old Unix (a SunOS 4.1.3_U1) without all SEEK_* defined.... */
-
+typedef unsigned long z_crc_t;
 
 // NOT sure that this work on ALL platform
 #define MAKEULONG64(a, b) ((ZPOS64_T)(((unsigned long)(a)) | ((ZPOS64_T)((unsigned long)(b))) << 32))

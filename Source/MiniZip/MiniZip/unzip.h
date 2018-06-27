@@ -51,9 +51,10 @@ extern "C" {
 #include "zlib.h"
 #endif
 
-#ifndef  _ZLIBIOAPI_H
-#include "ioapi.h"
-#endif
+//#ifndef  _ZLIBIOAPI_H
+//#include "ioapi.h"
+//#endif
+#include "IOUe4Api.h"
 
 #ifdef HAVE_BZIP2
 #include "bzlib.h"

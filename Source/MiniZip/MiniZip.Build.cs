@@ -20,11 +20,17 @@ public class MiniZip : ModuleRules
 				"MiniZip/Private",
                 Path.GetFullPath(Path.Combine(ModuleDirectory, "MiniZip")),
         // ... add other private include paths required here ...
-    }
+				}
 			);
-			
-		
-		PublicDependencyModuleNames.AddRange(
+
+        if (Target.Platform != UnrealTargetPlatform.Win64)
+        {
+            Definitions.Add("IOAPI_NO_64");
+        }
+        
+        
+
+        PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"Core",
